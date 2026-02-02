@@ -60,13 +60,13 @@ def main(
 @app.command()
 def music(
     prompt: str = typer.Option(..., "--prompt", "-p", help="Music style prompt"),
-    provider: str = typer.Option("lyria", "--provider", help="Provider: lyria, minimax"),
+    provider: str = typer.Option("lyria", "--provider", help="Provider: lyria, loudly"), # Changed from minimax to loudly
     style: Optional[str] = typer.Option(None, "--style", "-s", help="Preset style name"),
     duration: int = typer.Option(30, "--duration", "-d", help="Duration in seconds"),
     bpm: int = typer.Option(120, "--bpm", help="Beats per minute"),
     lyrics: Optional[Path] = typer.Option(None, "--lyrics", "-l", help="Lyrics file"),
     reference_url: Optional[str] = typer.Option(
-        None, "--reference-url", "-r", help="Reference audio URL for style transfer (MiniMax only)"
+        None, "--reference-url", "-r", help="Reference audio URL for style transfer (Loudly does not support)" # Updated help text
     ),
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Output file"),
     force: bool = typer.Option(
@@ -341,86 +341,7 @@ def _print_result(result: GenerationResult):
         console.print(f"   Error: {result.error}")
 
 
-@app.command("music-status")
-def music_status(
-    generation_id: str = typer.Argument(..., help="Generation ID from previous request"),
-    output: Optional[Path] = typer.Option(
-        None, "--output", "-o", help="Output file (downloads if complete)"
-    ),
-):
-    """Check MiniMax music generation status and optionally download."""
-    asyncio.run(_check_music_status(generation_id, output))
 
-
-async def _check_music_status(generation_id: str, output: Optional[Path]):
-    """Check generation status and download if ready."""
-    from ai_content.providers.aimlapi.client import AIMLAPIClient
-    from ai_content.core.job_tracker import get_tracker, JobStatus
-
-    client = AIMLAPIClient()
-    tracker = get_tracker()
-    console.print(f"[cyan]Checking status for: {generation_id}[/cyan]")
-
-    try:
-        status = await client.poll_status("/v2/generate/audio", generation_id)
-        state = status.get("status") or status.get("state", "unknown")
-        console.print(f"[blue]Status: {state}[/blue]")
-
-        if state.lower() in ("completed", "done", "success"):
-            console.print("[green]✅ Generation complete![/green]")
-
-            # Extract audio URL
-            audio_url = None
-            for key in ["audio_url", "url", "output"]:
-                if key in status:
-                    val = status[key]
-                    if isinstance(val, str) and val.startswith("http"):
-                        audio_url = val
-                        break
-                    elif isinstance(val, dict):
-                        audio_url = val.get("audio_url") or val.get("url")
-                        if audio_url:
-                            break
-                    elif isinstance(val, list) and val:
-                        audio_url = val[0].get("audio_url") or val[0].get("url")
-                        if audio_url:
-                            break
-
-            if audio_url and output:
-                console.print(f"[blue]Downloading to {output}...[/blue]")
-                audio_data = await client.download_file(audio_url)
-                output.parent.mkdir(parents=True, exist_ok=True)
-                output.write_bytes(audio_data)
-                console.print(f"[green]✅ Saved to {output}[/green]")
-                console.print(f"   Size: {len(audio_data) / (1024 * 1024):.2f} MB")
-                # Update job tracker
-                tracker.update_status(generation_id, JobStatus.DOWNLOADED, str(output))
-            elif audio_url:
-                console.print(f"[cyan]Audio URL: {audio_url}[/cyan]")
-                console.print("[yellow]Use --output to download[/yellow]")
-                tracker.update_status(generation_id, JobStatus.COMPLETED)
-            else:
-                console.print("[yellow]Audio URL not found in response[/yellow]")
-                console.print(f"Response: {status}")
-                tracker.update_status(generation_id, JobStatus.COMPLETED)
-
-        elif state.lower() in ("queued", "pending", "processing"):
-            console.print("[yellow]Still processing. Check again later.[/yellow]")
-            console.print(f"Run: uv run ai-content music-status {generation_id}")
-            if state.lower() == "processing":
-                tracker.update_status(generation_id, JobStatus.PROCESSING)
-        elif state.lower() in ("failed", "error"):
-            error = status.get("error") or status.get("message") or "Unknown error"
-            console.print(f"[red]❌ Generation failed: {error}[/red]")
-            tracker.update_status(generation_id, JobStatus.FAILED)
-        else:
-            console.print("[yellow]Unknown status. Full response:[/yellow]")
-            console.print(f"{status}")
-
-    except Exception as e:
-        console.print(f"[red]Error: {e}[/red]")
-    finally:
-        await client.close()
 
 
 # === Job Management Commands ===
