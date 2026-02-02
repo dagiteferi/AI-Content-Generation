@@ -16,7 +16,7 @@ __all__ = [
     "LoudlySettings", # Changed from AIMLAPISettings
     "KlingSettings",
     "get_settings",
-    "configure",https://github.com/dagiteferi/AI-Content-Generation
+    "configure",
     "load_yaml_config",
     "merge_configs",
 ]
