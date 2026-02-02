@@ -3,7 +3,7 @@
 from ai_content.config.settings import (
     Settings,
     GoogleSettings,
-    AIMLAPISettings,
+    LoudlySettings, # Changed from AIMLAPISettings
     KlingSettings,
     get_settings,
     configure,
@@ -13,10 +13,10 @@ from ai_content.config.loader import load_yaml_config, merge_configs
 __all__ = [
     "Settings",
     "GoogleSettings",
-    "AIMLAPISettings",
+    "LoudlySettings", # Changed from AIMLAPISettings
     "KlingSettings",
     "get_settings",
-    "configure",
+    "configure",https://github.com/dagiteferi/AI-Content-Generation
     "load_yaml_config",
     "merge_configs",
 ]
