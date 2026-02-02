@@ -53,7 +53,7 @@ class LoudlySettings(BaseSettings):
     """Loudly Music API configuration."""
 
     api_key: str = Field(default="", alias="LOUDLY_API_KEY")
-    base_url: str = "https://api.loudly.com" # Assuming this is the base URL
+    base_url: str = "https://soundtracks.loudly.com/api" # Corrected base URL
 
     # Timeouts
     request_timeout: int = 60
