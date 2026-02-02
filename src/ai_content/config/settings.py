@@ -32,7 +32,7 @@ class GoogleSettings(BaseSettings):
     video_aspect_ratio: str = "16:9"
     video_resolution: str = "1080p"
     video_duration_seconds: int = 8
-    video_person_generation: str = "allow_adult"
+    video_person_generation: str | None = None # Changed default to None # Changed default to None
 
     # Image defaults
     image_aspect_ratio: str = "16:9"
@@ -49,22 +49,14 @@ class GoogleSettings(BaseSettings):
     )
 
 
-class AIMLAPISettings(BaseSettings):
-    """AIMLAPI configuration."""
+class LoudlySettings(BaseSettings):
+    """Loudly Music API configuration."""
 
-    api_key: str = Field(default="", alias="AIMLAPI_KEY")
-    base_url: str = "https://api.aimlapi.com"
+    api_key: str = Field(default="", alias="LOUDLY_API_KEY")
+    base_url: str = "https://api.loudly.com" # Assuming this is the base URL
 
-    # Models
-    music_model: str = "minimax/music-2.0"
-    lyria_model: str = "google/lyria2"
-    kling_model: str = "klingai/v2.1-master-text-to-video"
-    wan_model: str = "alibaba/wan-2.6-t2v"
-
-    # Timeouts (MiniMax music can take 15-30 minutes)
+    # Timeouts
     request_timeout: int = 60
-    poll_interval: int = 10
-    max_poll_attempts: int = 180  # 30 minutes at 10s intervals
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -122,7 +114,7 @@ class Settings(BaseSettings):
 
     # Enable/disable providers
     use_google: bool = True
-    use_aimlapi: bool = True
+    use_loudly: bool = True # Changed from use_aimlapi
     use_kling_direct: bool = True
 
     # Logging
@@ -130,7 +122,7 @@ class Settings(BaseSettings):
 
     # Nested settings
     google: GoogleSettings = Field(default_factory=GoogleSettings)
-    aimlapi: AIMLAPISettings = Field(default_factory=AIMLAPISettings)
+    loudly: LoudlySettings = Field(default_factory=LoudlySettings) # Changed from aimlapi
     kling: KlingSettings = Field(default_factory=KlingSettings)
 
     model_config = SettingsConfigDict(
